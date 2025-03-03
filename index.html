@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latvian Names Statistics</title>
+    <style>
+        :root {
+            --primary: #8B0000;
+            --secondary: #BF0A30;
+            --accent: #FFFFFF;
+            --background: #f5f5f5;
+            --text: #333;
+            --card: #fff;
+            --border: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--accent);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .latvian-flag {
+            display: flex;
+            width: 60px;
+            height: 30px;
+            margin: 0 auto 1rem;
+        }
+
+        .flag-dark {
+            background-color: #9E3039;
+            height: 100%;
+            width: 100%;
+        }
+
+        .flag-stripe {
+            background-color: white;
+            height: 40%;
+            width: 100%;
+            margin-top: 9px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background-color: var(--card);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: var(--accent);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        .letter-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .letter-btn {
+            background-color: var(--accent);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .letter-btn:hover, .letter-btn.active {
+            background-color: var(--secondary);
+            color: var(--accent);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .name-card {
+            background-color: var(--card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .name-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .name-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .name-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .name-stat {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .gender-male {
+            color: #0066cc;
+        }
+
+        .gender-female {
+            color: #cc0066;
+        }
+
+        .popularity-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .popularity-fill {
+            height: 100%;
+            background-color: var(--secondary);
+            border-radius: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: var(--text);
+        }
+
+        .name-count {
+            text-align: right;
+            margin-top: 1rem;
+            font-style: italic;
+            color: #666;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            background-color: var(--primary);
+            color: var(--accent);
+        }
+
+        .attribution {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="latvian-flag">
+            <div class="flag-dark">
+                <div class="flag-stripe"></div>
+            </div>
+        </div>
+        <h1>Latvian Names Statistics</h1>
+        <p class="subtitle">Explore the popularity of names in Latvia</p>
+    </header>
+
+    <div class="container">
+        <div class="controls">
+            <div class="control-group">
+                <label for="sort-by">Sort By</label>
+                <select id="sort-by">
+                    <option value="popularity">Most Popular</option>
+                    <option value="alphabetical">Alphabetical</option>
+                    <option value="trend">Trending</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="gender-filter">Gender</label>
+                <select id="gender-filter">
+                    <option value="all">All Genders</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="unisex">Unisex</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="search">Search</label>
+                <input type="text" id="search" placeholder="Type a name...">
+            </div>
+            <div class="control-group">
+                <label>First Letter</label>
+                <div class="letter-filter" id="letter-buttons">
+                    <button class="letter-btn active" data-letter="all">All</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="name-count" id="results-count">Showing 0 names</div>
+        
+        <div class="stats-grid" id="names-grid">
+            <div class="loading">Loading names data...</div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Latvian Names Statistics Explorer</p>
+        <p class="attribution">Data based on statistics from Latvia's Office of Citizenship and Migration Affairs</p>
+    </footer>
+
+    <script>
+        // Sample data - would be replaced with real data in production
+        const namesData = [
+            { 
+                id: 1, 
+                name: "Jānis", 
+                gender: "male", 
+                count: 48765, 
+                rank: 1,
+                percentPopulation: 2.54,
+                yearTrend: "+0.2%",
+                origins: "Latvian form of John",
+                meaning: "God is gracious"
+            },
+            { 
+                id: 2, 
+                name: "Anna", 
+                gender: "female", 
+                count: 15487, 
+                rank: 1,
+                percentPopulation: 0.81,
+                yearTrend: "-0.1%",
+                origins: "Latvian, various European",
+                meaning: "Grace"
+            },
+            { 
+                id: 3, 
+                name: "Roberts", 
+                gender: "male", 
+                count: 10283, 
+                rank: 2,
+                percentPopulation: 0.54,
+                yearTrend: "+0.5%",
+                origins: "Germanic",
+                meaning: "Bright fame"
+            },
+            { 
+                id: 4, 
+                name: "Marta", 
+                gender: "female", 
+                count: 8965, 
+                rank: 2,
+                percentPopulation: 0.47,
+                yearTrend: "+1.2%",
+                origins: "Latvian, various European",
+                meaning: "Lady, mistress of the house"
+            },
+            { 
+                id: 5, 
+                name: "Andris", 
+                gender: "male", 
+                count: 9854, 
+                rank: 3,
+                percentPopulation: 0.51,
+                yearTrend: "-0.4%",
+                origins: "Latvian",
+                meaning: "Manly, brave"
+            },
+            { 
+                id: 6, 
+                name: "Līga", 
+                gender: "female", 
+                count: 8743, 
+                rank: 3,
+                percentPopulation: 0.46,
+                yearTrend: "-0.3%",
+                origins: "Latvian",
+                meaning: "To sway, to celebrate"
+            },
+            { 
+                id: 7, 
+                name: "Kārlis", 
+                gender: "male", 
+                count: 7895, 
+                rank: 4,
+                percentPopulation: 0.41,
+                yearTrend: "+0.1%",
+                origins: "Latvian form of Charles",
+                meaning: "Free man"
+            },
+            { 
+                id: 8, 
+                name: "Laura", 
+                gender: "female", 
+                count: 7684, 
+                rank: 4,
+                percentPopulation: 0.40,
+                yearTrend: "-0.5%",
+                origins: "Latvian, various European",
+                meaning: "Laurel tree, symbol of victory"
+            },
+            { 
+                id: 9, 
+                name: "Mārtiņš", 
+                gender: "male", 
+                count: 7564, 
+                rank: 5,
+                percentPopulation: 0.39,
+                yearTrend: "+0.3%",
+                origins: "Latvian form of Martin",
+                meaning: "Dedicated to Mars"
+            },
+            { 
+                id: 10, 
+                name: "Baiba", 
+                gender: "female", 
+                count: 6843, 
+                rank: 5,
+                percentPopulation: 0.36,
+                yearTrend: "-0.2%",
+                origins: "Latvian",
+                meaning: "Babbling, chattering"
+            },
+            { 
+                id: 11, 
+                name: "Kristaps", 
+                gender: "male", 
+                count: 6752, 
+                rank: 6,
+                percentPopulation: 0.35,
+                yearTrend: "+1.5%",
+                origins: "Latvian form of Christopher",
+                meaning: "Christ-bearer"
+            },
+            { 
+                id: 12, 
+                name: "Ilze", 
+                gender: "female", 
+                count: 6459, 
+                rank: 6,
+                percentPopulation: 0.34,
+                yearTrend: "-0.7%",
+                origins: "Latvian",
+                meaning: "Dedicated to God"
+            },
+            { 
+                id: 13, 
+                name: "Raivis", 
+                gender: "male", 
+                count: 5987, 
+                rank: 7,
+                percentPopulation: 0.31,
+                yearTrend: "+0.4%",
+                origins: "Latvian",
+                meaning: "Peaceful, peaceful ruler"
+            },
+            { 
+                id: 14, 
+                name: "Kristīne", 
+                gender: "female", 
+                count: 5876, 
+                rank: 7,
+                percentPopulation: 0.31,
+                yearTrend: "-0.1%",
+                origins: "Latvian form of Christine",
+                meaning: "Follower of Christ"
+            },
+            { 
+                id: 15, 
+                name: "Artūrs", 
+                gender: "male", 
+                count: 5762, 
+                rank: 8,
+                percentPopulation: 0.30,
+                yearTrend: "+0.8%",
+                origins: "Latvian form of Arthur",
+                meaning: "Bear hero"
+            },
+            { 
+                id: 16, 
+                name: "Zane", 
+                gender: "female", 
+                count: 5532, 
+                rank: 8,
+                percentPopulation: 0.29,
+                yearTrend: "+0.2%",
+                origins: "Latvian",
+                meaning: "Gift of God"
+            },
+            { 
+                id: 17, 
+                name: "Ēriks", 
+                gender: "male", 
+                count: 5321, 
+                rank: 9,
+                percentPopulation: 0.28,
+                yearTrend: "-0.3%",
+                origins: "Latvian form of Eric",
+                meaning: "Eternal ruler"
+            },
+            { 
+                id: 18, 
+                name: "Dace", 
+                gender: "female", 
+                count: 5245, 
+                rank: 9,
+                percentPopulation: 0.27,
+                yearTrend: "-0.5%",
+                origins: "Latvian",
+                meaning: "Gift"
+            },
+            { 
+                id: 19, 
+                name: "Juris", 
+                gender: "male", 
+                count: 5124, 
+                rank: 10,
+                percentPopulation: 0.27,
+                yearTrend: "-0.6%",
+                origins: "Latvian form of George",
+                meaning: "Farmer"
+            },
+            { 
+                id: 20, 
+                name: "Inese", 
+                gender: "female", 
+                count: 5016, 
+                rank: 10,
+                percentPopulation: 0.26,
+                yearTrend: "-0.4%",
+                origins: "Latvian",
+                meaning: "Pure, holy"
+            },
+            { 
+                id: 21, 
+                name: "Krišjānis", 
+                gender: "male", 
+                count: 4892, 
+                rank: 11,
+                percentPopulation: 0.26,
+                yearTrend: "+0.3%",
+                origins: "Latvian",
+                meaning: "Christian"
+            },
+            { 
+                id: 22, 
+                name: "Elīna", 
+                gender: "female", 
+                count: 4756, 
+                rank: 11,
+                percentPopulation: 0.25,
+                yearTrend: "+0.1%",
+                origins: "Latvian form of Helen",
+                meaning: "Bright, shining light"
+            },
+            { 
+                id: 23, 
+                name: "Valdis", 
+                gender: "male", 
+                count: 4635, 
+                rank: 12,
+                percentPopulation: 0.24,
+                yearTrend: "-0.2%",
+                origins: "Latvian",
+                meaning: "To rule"
+            },
+            { 
+                id: 24, 
+                name: "Agnese", 
+                gender: "female", 
+                count: 4582, 
+                rank: 12,
+                percentPopulation: 0.24,
+                yearTrend: "+0.4%",
+                origins: "Latvian form of Agnes",
+                meaning: "Pure, chaste"
+            }
+        ];
+
+        // DOM elements
+        const nameGrid = document.getElementById('names-grid');
+        const sortBySelect = document.getElementById('sort-by');
+        const genderFilter = document.getElementById('gender-filter');
+        const searchInput = document.getElementById('search');
+        const letterButtons = document.getElementById('letter-buttons');
+        const resultsCount = document.getElementById('results-count');
+
+        // Generate letter buttons
+        const latvianAlphabet = ['A', 'Ā', 'B', 'C', 'Č', 'D', 'E', 'Ē', 'F', 'G', 'Ģ', 'H', 'I', 'Ī', 'J', 'K', 'Ķ', 'L', 'Ļ', 'M', 'N', 'Ņ', 'O', 'P', 'R', 'S', 'Š', 'T', 'U', 'Ū', 'V', 'Z', 'Ž'];
+        
+        latvianAlphabet.forEach(letter => {
+            const button = document.createElement('button');
+            button.className = 'letter-btn';
+            button.setAttribute('data-letter', letter);
+            button.textContent = letter;
+            letterButtons.appendChild(button);
+        });
+
+        // State
+        let currentFilters = {
+            sort: 'popularity',
+            gender: 'all',
+            search: '',
+            letter: 'all'
+        };
+
+        // Event listeners
+        sortBySelect.addEventListener('change', () => {
+            currentFilters.sort = sortBySelect.value;
+            renderNames();
+        });
+
+        genderFilter.addEventListener('change', () => {
+            currentFilters.gender = genderFilter.value;
+            renderNames();
+        });
+
+        searchInput.addEventListener('input', () => {
+            currentFilters.search = searchInput.value.toLowerCase();
+            renderNames();
+        });
+
+        letterButtons.addEventListener('click', (e) => {
+            if (e.target.classList.contains('letter-btn')) {
+                // Remove active class from all buttons
+                document.querySelectorAll('.letter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                e.target.classList.add('active');
+                
+                currentFilters.letter = e.target.getAttribute('data-letter');
+                renderNames();
+            }
+        });
+
+        // Filter and sort names
+        function filterNames() {
+            return namesData.filter(name => {
+                // Gender filter
+                if (currentFilters.gender !== 'all' && name.gender !== currentFilters.gender) {
+                    return false;
+                }
+                
+                // Search filter
+                if (currentFilters.search && !name.name.toLowerCase().includes(currentFilters.search)) {
+                    return false;
+                }
+                
+                // Letter filter
+                if (currentFilters.letter !== 'all' && !name.name.startsWith(currentFilters.letter)) {
+                    return false;
+                }
+                
+                return true;
+            }).sort((a, b) => {
+                // Sort
+                if (currentFilters.sort === 'popularity') {
+                    return b.count - a.count;
+                } else if (currentFilters.sort === 'alphabetical') {
+                    return a.name.localeCompare(b.name);
+                } else if (currentFilters.sort === 'trend') {
+                    // Parse the trend percentage value
+                    const trendA = parseFloat(a.yearTrend.replace('%', ''));
+                    const trendB = parseFloat(b.yearTrend.replace('%', ''));
+                    return trendB - trendA;
+                }
+                
+                return 0;
+            });
+        }
+
+        // Render names to grid
+        function renderNames() {
+            const filteredNames = filterNames();
+            
+            // Update count
+            resultsCount.textContent = `Showing ${filteredNames.length} names`;
+            
+            // Clear grid
+            nameGrid.innerHTML = '';
+            
+            // Populate grid
+            filteredNames.forEach(name => {
+                const maxCount = Math.max(...namesData.map(n => n.count));
+                const popularityPercentage = (name.count / maxCount) * 100;
+                
+                const card = document.createElement('div');
+                card.className = 'name-card';
+                card.innerHTML = `
+                    <h3>${name.name}</h3>
+                    <div class="name-details">
+                        <div class="name-stat">
+                            <span>Gender:</span>
+                            <span class="gender-${name.gender}">${name.gender.charAt(0).toUpperCase() + name.gender.slice(1)}</span>
+                        </div>
+                        <div class="name-stat">
+                            <span>Popularity Rank:</span>
+                            <span>#${name.rank}</span>
+                        </div>
+                        <div class="name-stat">
+                            <span>Count:</span>
+                            <span>${name.count.toLocaleString()}</span>
+                        </div>
+                        <div class="name-stat">
+                            <span>% of Population:</span>
+                            <span>${name.percentPopulation}%</span>
+                        </div>
+                        <div class="name-stat">
+                            <span>Yearly Trend:</span>
+                            <span style="color: ${name.yearTrend.includes('+') ? 'green' : 'red'}">${name.yearTrend}</span>
+                        </div>
+                        <div class="name-stat">
+                            <span>Origins:</span>
+                            <span>${name.origins}</span>
+                        </div>
+                        <div class="name-stat">
+                            <span>Meaning:</span>
+                            <span>${name.meaning}</span>
+                        </div>
+                    </div>
+                    <div class="popularity-bar">
+                        <div class="popularity-fill" style="width: ${popularityPercentage}%"></div>
+                    </div>
+                `;
+                
+                nameGrid.appendChild(card);
+            });
+        }
+
+        // Initial render
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                renderNames();
+            }, 500); // Simulate loading delay
+        });
+    </script>
+</body>
+</html>
